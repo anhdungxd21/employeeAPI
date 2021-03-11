@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("position")
+@RequestMapping("positions")
 public class PositionController {
 
     @Autowired
@@ -34,5 +34,4 @@ public class PositionController {
         response.setStatus(200);
         return response;
     }
-
 }
