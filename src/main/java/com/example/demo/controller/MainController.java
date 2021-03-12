@@ -31,6 +31,16 @@ public class MainController {
     @Autowired
     private IPositionService positionService;
 
+    @GetMapping("/search")
+    public Response getAllEmployeeByName(@RequestParam("name")String nameSearch){
+        Integer page = 0;
+        Integer size = 10;
+        Response response = new Response();
+        Pageable pageable = PageRequest.of(page,size);
+        response.setData(employeeService.findAllByName(nameSearch,pageable));
+        return response;
+    }
+
     @GetMapping
     public Response getAllPaging(@RequestParam("page")Optional<String> optionalPage, @RequestParam("size") Optional<String> optionalSize){
         Integer page = 0;
@@ -48,14 +58,6 @@ public class MainController {
         return response;
     }
 
-    @GetMapping("/create")
-    public Response getInfoCreate(){
-        InformationDTO info = new InformationDTO();
-        info.setPosition(positionService.findAll());
-        info.setOffice(officeService.findAll());
-        return new Response(200,"Information",info);
-    }
-
     @PostMapping("/create")
     @ResponseBody
     public ResponseEntity<Employee> addEmployee(@RequestBody EmployeeDTO employeeDTO){
@@ -64,4 +66,58 @@ public class MainController {
         return new ResponseEntity(employee, HttpStatus.CREATED);
     }
 
+    @GetMapping("/{id}")
+    public Response getEmployeeById(@PathVariable("id") Long id){
+        Optional optional = employeeService.findById(id);
+        Response response = new Response();
+        if(optional.isPresent()) {
+            response.setStatus(200);
+            response.setData(optional.get());
+            return response;
+        }else{
+            response.setStatus(404);
+            return response;
+        }
+    }
+
+    @PutMapping("/{id}")
+    public Response editEmployee(@PathVariable("id") Long id,
+                                 @RequestBody EmployeeDTO employeeDTO){
+        Optional<Employee> optionalEmployee = employeeService.findById(id);
+        Response response = new Response();
+        if(optionalEmployee.isPresent()){
+            if(employeeDTO.getPosition()==null || employeeDTO.getOffice() == null){
+                response.setStatus(404);
+                response.setMessage("Not Found");
+                return response;
+            }
+            Employee employee = converterDTO.getEmployee(employeeDTO);
+            employee.setId(id);
+            employeeService.save(employee);
+            response.setStatus(202);
+            response.setMessage("Edit Employee");
+            response.setData(employee);
+            return response;
+        }else{
+            response.setStatus(404);
+            response.setMessage("Not Found");
+            return response;
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Response deleteEmployee(@PathVariable("id")Long id){
+        Optional<Employee> optionalEmployee = employeeService.findById(id);
+        Response response = new Response();
+        if(optionalEmployee.isPresent()){
+            employeeService.remove(id);
+            response.setStatus(204);
+            response.setMessage("No content");
+            return response;
+        }else{
+            response.setStatus(404);
+            response.setMessage("Not Found");
+            return response;
+        }
+    }
 }
